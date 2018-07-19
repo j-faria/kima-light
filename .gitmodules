@@ -4,3 +4,6 @@
 [submodule "batman"]
 	path = batman
 	url = https://github.com/j-faria/batman.git
+[submodule "eigen"]
+	path = eigen
+	url = https://github.com/eigenteam/eigen-git-mirror.git

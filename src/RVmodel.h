@@ -10,6 +10,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Cholesky>
 
+#include "celerite/celerite.h"
+
 // whether the model includes a GP component
 extern const bool GP;
 
@@ -43,13 +45,13 @@ class RVmodel
         double log_eta1, log_eta2, log_eta3, log_eta4, log_eta5;
         double a,b,c,P;
 
-        /*celerite::solver::CholeskySolver<double> solver;
+        celerite::solver::CholeskySolver<double> solver;
         Eigen::VectorXd alpha_real,
                  beta_real,
                  alpha_complex_real,
                  alpha_complex_imag,
                  beta_complex_real,
-                 beta_complex_imag;*/
+                 beta_complex_imag;
 
         // The signal
         std::vector<long double> mu = 

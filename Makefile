@@ -1,11 +1,12 @@
 DNEST4_PATH = DNest4/code
 EIGEN_PATH = eigen
+CELERITE_PATH = celerite/cpp/include
 
 export CXX = g++
 
 CXXFLAGS = -pthread -std=c++11 -O3 -DNDEBUG -w -DEIGEN_MPL2_ONLY
 LIBS = -L$(DNEST4_PATH) -ldnest4 -L/usr/local/lib
-includes = -I$(DNEST4_PATH) -I$(EIGEN_PATH) 
+includes = -I$(DNEST4_PATH) -I$(EIGEN_PATH) -I$(CELERITE_PATH)
 
 SRCDIR = ./src
 SRCS =\

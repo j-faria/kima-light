@@ -40,15 +40,15 @@ RVmodel::RVmodel()
 int main(int argc, char** argv)
 {
     /* set the RV data file */
-    char* datafile = "examples/BL2009/BL2009_dataset1.kms.rv";
-
+    char* datafile = "data/ktwo228801451c102_lpd_LC.txt";
+    
     /* load the file (RVs are in km/s) */
     /* don't skip any lines in the header */
-	Data::get_instance().load(datafile, "kms", 0);
+	Data::get_instance().load(datafile, "ms", 7);
 
     // set the sampler and run it!
 	Sampler<RVmodel> sampler = setup<RVmodel>(argc, argv);
-	sampler.run();
+	// sampler.run();
 
 	return 0;
 }

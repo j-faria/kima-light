@@ -19,7 +19,7 @@ HEADERS=$(subst .cpp,.h,$(SRCS))
 
 EXAMPLES = BL2009 CoRoT7 many_planets 51Peg default_priors
 
-all: main examples
+all: main #examples
 
 %.o: %.cpp
 	@echo "Compiling:" $<

@@ -1,4 +1,4 @@
-#include "RVConditionalPrior.h"
+#include "TransitConditionalPrior.h"
 #include "DNest4.h"
 #include "Utils.h"
 #include <cmath>
@@ -8,16 +8,11 @@ using namespace std;
 using namespace DNest4;
 
 
-extern ContinuousDistribution *log_muP_prior;
-extern ContinuousDistribution *wP_prior;
-extern ContinuousDistribution *log_muK_prior;
-
-extern ContinuousDistribution *Pprior;
-extern ContinuousDistribution *Kprior;
-
-extern ContinuousDistribution *eprior;
-extern ContinuousDistribution *phiprior;
-extern ContinuousDistribution *wprior;
+extern ContinuousDistribution *Cprior; // normalized out-of-transit level
+extern ContinuousDistribution *Rratprior; // radius ratio
+extern ContinuousDistribution *aRprior; // a over Rstar
+extern ContinuousDistribution *Pprior; // Orbital period
+extern ContinuousDistribution *PhiTprior; // Transit time in Phase
 
 
 RVConditionalPrior::RVConditionalPrior()
@@ -86,10 +81,10 @@ double RVConditionalPrior::log_pdf(const std::vector<double>& vec) const
              return -1E300;
     }
 
-    return Pprior->log_pdf(vec[0]) + 
-           Kprior->log_pdf(vec[1]) + 
-           phiprior->log_pdf(vec[2]) + 
-           eprior->log_pdf(vec[3]) + 
+    return Pprior->log_pdf(vec[0]) +
+           Kprior->log_pdf(vec[1]) +
+           phiprior->log_pdf(vec[2]) +
+           eprior->log_pdf(vec[3]) +
            wprior->log_pdf(vec[4]);
 }
 

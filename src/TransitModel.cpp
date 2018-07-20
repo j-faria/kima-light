@@ -1,5 +1,5 @@
-#include "RVmodel.h"
-#include "RVConditionalPrior.h"
+#include "Transitmodel.h"
+#include "TransitConditionalPrior.h"
 #include "DNest4.h"
 #include "RNG.h"
 #include "Utils.h"
@@ -8,7 +8,7 @@
 #include <limits>
 #include <fstream>
 #include <chrono>
-#include <time.h> 
+#include <time.h>
 
 using namespace std;
 using namespace Eigen;
@@ -16,20 +16,11 @@ using namespace DNest4;
 
 #define TIMING false
 
-extern ContinuousDistribution *Cprior; // systematic velocity, m/s
-extern ContinuousDistribution *Jprior; // additional white noise, m/s
-
-extern ContinuousDistribution *slope_prior; // m/s/day
-
-extern ContinuousDistribution *log_eta1_prior;
-extern ContinuousDistribution *log_eta2_prior;
-extern ContinuousDistribution *eta3_prior;
-extern ContinuousDistribution *log_eta4_prior;
-
-// from the offsets determined by Lo Curto et al. 2015 (only FGK stars)
-// mean, std = 14.641789473684208, 2.7783035258938971
-Gaussian *fiber_offset_prior = new Gaussian(15., 3.);
-//Uniform *fiber_offset_prior = new Uniform(0., 50.);  // old 
+extern ContinuousDistribution *Cprior; // normalized out-of-transit level
+extern ContinuousDistribution *Rratprior; // radius ratio
+extern ContinuousDistribution *aRprior; // a over Rstar
+extern ContinuousDistribution *Pprior; // Orbital period 
+extern ContinuousDistribution *PhiTprior; // Transit time in Phase
 
 const double halflog2pi = 0.5*log(2.*M_PI);
 
@@ -37,7 +28,7 @@ void RVmodel::from_prior(RNG& rng)
 {
     planets.from_prior(rng);
     planets.consolidate_diff();
-    
+
     background = Cprior->generate(rng);
     extra_sigma = Jprior->generate(rng);
 
@@ -95,7 +86,7 @@ void RVmodel::calculate_C()
                  alpha_complex_imag(1),
                  beta_complex_real(1),
                  beta_complex_imag(1);
-        
+
         //a = eta1;
         //b = eta4;
         //P = eta3;
@@ -126,7 +117,7 @@ void RVmodel::calculate_C()
 
         // auto end1 = std::chrono::high_resolution_clock::now();
         // cout << "new GP: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end1-begin1).count() << " ns" << std::endl;
-        
+
     #else
 
         int N = Data::get_instance().get_t().size();
@@ -137,7 +128,7 @@ void RVmodel::calculate_C()
             for(size_t j=i; j<N; j++)
             {
                 //C(i, j) = eta1*eta1*exp(-0.5*pow((t[i] - t[j])/eta2, 2) );
-                C(i, j) = eta1*eta1*exp(-0.5*pow((t[i] - t[j])/eta2, 2) 
+                C(i, j) = eta1*eta1*exp(-0.5*pow((t[i] - t[j])/eta2, 2)
                            -2.0*pow(sin(M_PI*(t[i] - t[j])/eta3)/eta4, 2) );
 
                 if(i==j)
@@ -175,7 +166,7 @@ void RVmodel::calculate_mu()
     {
         mu.assign(mu.size(), background);
         staleness = 0;
-        if(trend) 
+        if(trend)
         {
             for(size_t i=0; i<t.size(); i++)
             {
@@ -207,7 +198,7 @@ void RVmodel::calculate_mu()
             P = exp(components[j][0]);
         else
             P = components[j][0];
-        
+
         K = components[j][1];
         phi = components[j][2];
         ecc = components[j][3];
@@ -225,7 +216,7 @@ void RVmodel::calculate_mu()
     #if TIMING
     auto end = std::chrono::high_resolution_clock::now();
     cout << "Model eval took " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()*1E-6 << " ms" << std::endl;
-    #endif    
+    #endif
 
 }
 
@@ -396,7 +387,7 @@ double RVmodel::log_likelihood() const
         #if DOCEL
             logL = -0.5 * (solver.dot_solve(residual) +
                            solver.log_determinant() +
-                           y.size()*log(2*M_PI)); 
+                           y.size()*log(2*M_PI));
         #else
             // perform the cholesky decomposition of C
             Eigen::LLT<Eigen::MatrixXd> cholesky = C.llt();
@@ -427,7 +418,7 @@ double RVmodel::log_likelihood() const
         // auto end1 = std::chrono::high_resolution_clock::now();
         // cout << "solve took " << std::chrono::duration_cast<std::chrono::nanoseconds>(end1-begin1).count() << " ns" << std::endl;
 
-    } 
+    }
     else
     {
         /** The following code calculates the log likelihood in the case of a t-Student model*/
@@ -471,7 +462,7 @@ void RVmodel::print(std::ostream& out) const
     out.precision(8);
 
     out<<extra_sigma<<'\t';
-    
+
     if(trend)
         out<<slope<<'\t'; //<<quad*1E8<<'\t';
 
@@ -480,7 +471,7 @@ void RVmodel::print(std::ostream& out) const
 
     if(GP)
         out<<eta1<<'\t'<<eta2<<'\t'<<eta3<<'\t'<<eta4<<'\t';
-  
+
     planets.print(out);
 
     out<<' '<<staleness<<' ';
@@ -490,7 +481,7 @@ void RVmodel::print(std::ostream& out) const
 string RVmodel::description() const
 {
     string desc;
-    
+
     desc += "extra_sigma\t";
 
     if(trend)

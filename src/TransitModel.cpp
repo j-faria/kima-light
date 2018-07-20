@@ -1,4 +1,4 @@
-#include "Transitmodel.h"
+#include "TransitModel.h"
 #include "TransitConditionalPrior.h"
 #include "DNest4.h"
 #include "RNG.h"
@@ -20,7 +20,7 @@ extern ContinuousDistribution *Cprior; // normalized out-of-transit level
 
 const double halflog2pi = 0.5*log(2.*M_PI);
 
-void RVmodel::from_prior(RNG& rng)
+void TransitModel::from_prior(RNG& rng)
 {
     planets.from_prior(rng);
     planets.consolidate_diff();
@@ -59,7 +59,7 @@ void RVmodel::from_prior(RNG& rng)
 
 }
 
-void RVmodel::calculate_C()
+void TransitModel::calculate_C()
 {
 
     // Get the data
@@ -140,7 +140,7 @@ void RVmodel::calculate_C()
     #endif
 }
 
-void RVmodel::calculate_mu()
+void TransitModel::calculate_mu()
 {
     auto data = Data::get_instance();
     // Get the times from the data
@@ -216,7 +216,7 @@ void RVmodel::calculate_mu()
 
 }
 
-double RVmodel::perturb(RNG& rng)
+double TransitModel::perturb(RNG& rng)
 {
     auto data = Data::get_instance();
     const vector<double>& t = data.get_t();
@@ -360,7 +360,7 @@ double RVmodel::perturb(RNG& rng)
 }
 
 
-double RVmodel::log_likelihood() const
+double TransitModel::log_likelihood() const
 {
     double logL = 0.;
     auto data = Data::get_instance();
@@ -451,7 +451,7 @@ double RVmodel::log_likelihood() const
     return logL;
 }
 
-void RVmodel::print(std::ostream& out) const
+void TransitModel::print(std::ostream& out) const
 {
     // output precision
     out.setf(ios::fixed,ios::floatfield);
@@ -474,7 +474,7 @@ void RVmodel::print(std::ostream& out) const
     out<<background;
 }
 
-string RVmodel::description() const
+string TransitModel::description() const
 {
     string desc;
 
@@ -502,7 +502,7 @@ string RVmodel::description() const
 }
 
 
-void RVmodel::save_setup() {
+void TransitModel::save_setup() {
     // save the options of the current model in a INI file
 	std::fstream fout("kima_model_setup.txt", std::ios::out);
     fout << std::boolalpha;
@@ -536,7 +536,7 @@ void RVmodel::save_setup() {
     @param t_peri time of periastron passage
     @return eccentric anomaly.
 */
-double RVmodel::ecc_anomaly(double t, double period, double ecc, double time_peri)
+double TransitModel::ecc_anomaly(double t, double period, double ecc, double time_peri)
 {
     double tol;
     if (ecc < 0.8) tol = 1e-14;
@@ -570,7 +570,7 @@ double RVmodel::ecc_anomaly(double t, double period, double ecc, double time_per
     @param M mean anomaly (in radians)
     @return starting value for the eccentric anomaly.
 */
-double RVmodel::keplerstart3(double e, double M)
+double TransitModel::keplerstart3(double e, double M)
 {
     double t34 = e*e;
     double t35 = e*t34;
@@ -588,7 +588,7 @@ double RVmodel::keplerstart3(double e, double M)
     @param x starting value for the eccentric anomaly
     @return corrected value for the eccentric anomaly
 */
-double RVmodel::eps3(double e, double M, double x)
+double TransitModel::eps3(double e, double M, double x)
 {
     double t1 = cos(x);
     double t2 = -1 + e*t1;
@@ -612,7 +612,7 @@ double RVmodel::eps3(double e, double M, double x)
     @param t_peri time of periastron passage
     @return true anomaly.
 */
-double RVmodel::true_anomaly(double t, double period, double ecc, double t_peri)
+double TransitModel::true_anomaly(double t, double period, double ecc, double t_peri)
 {
     double E = ecc_anomaly(t, period, ecc, t_peri);
     double f = acos( (cos(E)-ecc)/( 1-ecc*cos(E) ) );

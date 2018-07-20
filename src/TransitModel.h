@@ -1,5 +1,5 @@
-#ifndef DNest4_RVmodel
-#define DNest4_RVmodel
+#ifndef DNest4_TransitModel
+#define DNest4_TransitModel
 
 #include <vector>
 #include "TransitConditionalPrior.h"
@@ -22,7 +22,7 @@ extern const bool obs_after_HARPS_fibers;
 extern const bool trend;
 
 
-class RVmodel
+class TransitModel
 {
     private:
         // Fix the number of planets? (by default, yes)
@@ -30,8 +30,8 @@ class RVmodel
         // Maximum number of planets
         int npmax {1};
 
-        DNest4::RJObject<RVConditionalPrior> planets =
-            DNest4::RJObject<RVConditionalPrior>(5, npmax, fix, RVConditionalPrior());
+        DNest4::RJObject<TransitConditionalPrior> planets =
+            DNest4::RJObject<TransitConditionalPrior>(5, npmax, fix, TransitConditionalPrior());
 
         double background;
         //std::vector<double> offsets;
@@ -74,7 +74,7 @@ class RVmodel
         unsigned int staleness;
 
     public:
-        RVmodel();
+        TransitModel();
 
         void save_setup();
 

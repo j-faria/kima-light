@@ -3,14 +3,14 @@
 
 from setuptools import setup
 
-setup(name='pykima',
+setup(name='pykimalight',
       version=open('VERSION').read().strip(), # same as kima
       description='Analysis of results from kima',
       author='João Faria',
       author_email='joao.faria@astro.up.pt',
       license='MIT',
-      url='https://github.com/j-faria/kima/tree/master/pykima',
-      packages=['pykima'],
+      url='https://github.com/j-faria/kima-light/tree/master/pykima',
+      packages=['pykimalight'],
       install_requires=[
         'numpy',
         'scipy',
@@ -19,9 +19,9 @@ setup(name='pykima',
       ],
       entry_points={
         'console_scripts': [
-            'kima-showresults = pykima.showresults:showresults',
-            'kima-checkpriors = pykima.check_priors:main',
-            'kima-template = pykima.make_template:main',
+            'kimal-showresults = pykimalight.showresults:showresults',
+            'kimal-checkpriors = pykimalight.check_priors:main',
+            'kimal-template = pykimalight.make_template:main',
             ]
         },
      )

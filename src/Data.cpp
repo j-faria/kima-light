@@ -74,9 +74,9 @@ istream& operator >> ( istream& ins, data_t& data )
 void Data::load(const char* filename, const char* units, int skip)
   /* 
   Read in tab/space separated file `filename` with columns
-  time  vrad  error
+  time  flux  error
   ...   ...   ...
-  where vrad and error are in `units` (either "kms" or "ms")
+  argument `units` is not used as of now
   */
   {
 
@@ -119,16 +119,16 @@ void Data::load(const char* filename, const char* units, int skip)
 
   // How many points did we read?
   printf("# Loaded %d data points from file %s\n", t.size(), filename);
-  if(units == "kms") printf("# Multiplied all RVs by 1000; units are now m/s.\n");
+  // if(units == "kms") printf("# Multiplied all RVs by 1000; units are now m/s.\n");
 
-  for(unsigned i=0; i<data.size(); i++)
-  {
-      if (t[i] > 57170.)
-      {
-          index_fibers = i;
-          break;
-      }
-  }
+  // for(unsigned i=0; i<data.size(); i++)
+  // {
+  //     if (t[i] > 57170.)
+  //     {
+  //         index_fibers = i;
+  //         break;
+  //     }
+  // }
 
   }
 

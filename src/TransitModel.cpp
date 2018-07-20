@@ -14,7 +14,7 @@ using namespace std;
 using namespace Eigen;
 using namespace DNest4;
 
-#define TIMING false
+#define TIMING true
 
 extern ContinuousDistribution *Cprior; // normalized out-of-transit level
 extern ContinuousDistribution *Jprior; // additional white noise, m/s
@@ -158,23 +158,6 @@ void TransitModel::calculate_mu()
     {
         mu.assign(mu.size(), background);
         staleness = 0;
-        if(trend)
-        {
-            for(size_t i=0; i<t.size(); i++)
-            {
-                mu[i] += slope*(t[i] - data.get_t_middle());
-            }
-        }
-
-        if(obs_after_HARPS_fibers)
-        {
-            for(size_t i=data.index_fibers; i<t.size(); i++)
-            {
-                mu[i] += fiber_offset;
-            }
-        }
-
-
     }
     else // just updating (adding) planets
         staleness++;
@@ -183,27 +166,27 @@ void TransitModel::calculate_mu()
     auto begin = std::chrono::high_resolution_clock::now();  // start timing
     #endif
 
-    double P, K, phi, ecc, omega, f, v, ti;
-    for(size_t j=0; j<components.size(); j++)
-    {
-        if(hyperpriors)
-            P = exp(components[j][0]);
-        else
-            P = components[j][0];
+    // double P, K, phi, ecc, omega, f, v, ti;
+    // for(size_t j=0; j<components.size(); j++)
+    // {
+    //     if(hyperpriors)
+    //         P = exp(components[j][0]);
+    //     else
+    //         P = components[j][0];
 
-        K = components[j][1];
-        phi = components[j][2];
-        ecc = components[j][3];
-        omega = components[j][4];
+    //     K = components[j][1];
+    //     phi = components[j][2];
+    //     ecc = components[j][3];
+    //     omega = components[j][4];
 
-        for(size_t i=0; i<t.size(); i++)
-        {
-            ti = t[i];
-            f = true_anomaly(ti, P, ecc, t[0]-(P*phi)/(2.*M_PI));
-            v = K*(cos(f+omega) + ecc*cos(omega));
-            mu[i] += v;
-        }
-    }
+    //     for(size_t i=0; i<t.size(); i++)
+    //     {
+    //         ti = t[i];
+    //         f = true_anomaly(ti, P, ecc, t[0]-(P*phi)/(2.*M_PI));
+    //         v = K*(cos(f+omega) + ecc*cos(omega));
+    //         mu[i] += v;
+    //     }
+    // }
 
     #if TIMING
     auto end = std::chrono::high_resolution_clock::now();
@@ -455,9 +438,9 @@ string TransitModel::description() const
     desc += "Np\t";
 
     if (planets.get_max_num_components()>0)
-        desc += "P\tK\tphi\tecc\tchi\t";
+        desc += "P\tRpRs\taRs\tphi\t";
 
-    desc += "staleness\tvsys";
+    desc += "staleness\tC";
 
     return desc;
 }

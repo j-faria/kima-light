@@ -12,7 +12,7 @@ SRCDIR = ./src
 SRCS =\
 $(SRCDIR)/Data.cpp \
 $(SRCDIR)/TransitConditionalPrior.cpp \
-$(SRCDIR)/Transitmodel.cpp \
+$(SRCDIR)/TransitModel.cpp \
 $(SRCDIR)/main.cpp
 
 OBJS=$(subst .cpp,.o,$(SRCS))

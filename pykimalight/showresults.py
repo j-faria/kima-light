@@ -52,7 +52,7 @@ def usage(full=True):
 
 def _parse_args(options):
     if options == '':
-        if 'kima-showresults' in sys.argv[0]:
+        if 'kimal-showresults' in sys.argv[0]:
             args = sys.argv[1:]
         else:
             args = options
@@ -104,6 +104,7 @@ def showresults(options=''):
     The argument `options` should be a string with the same options as for 
     the kima-showresults script.
     """
+
 
     # force correct CLI arguments
     args = _parse_args(options)

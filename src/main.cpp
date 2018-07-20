@@ -2,8 +2,8 @@
 #include <typeinfo>
 #include "DNest4.h"
 #include "Data.h"
-#include "RVmodel.h"
-#include "RVConditionalPrior.h"
+#include "TransitModel.h"
+#include "TransitConditionalPrior.h"
 
 using namespace std;
 using namespace DNest4;
@@ -17,24 +17,16 @@ const bool GP = false;
 const bool hyperpriors = false;
 const bool trend = false;
 
-RVmodel::RVmodel()
-:planets(5, 0, true, RVConditionalPrior())
+TransitModel::TransitModel()
+:planets(5, 0, true, TransitConditionalPrior())
 ,mu(Data::get_instance().get_t().size())
 ,C(Data::get_instance().get_t().size(), Data::get_instance().get_t().size())
 {
     auto data = Data::get_instance();
-    double ymin = data.get_y_min();
-    double ymax = data.get_y_max();
-    double topslope = data.topslope();
+    // Cprior = new Uniform(ymin, ymax);
 
-    // set the prior for the systemic velocity
-    Cprior = new Uniform(ymin, ymax);
-    // and for the slope parameter
-    if(trend)
-    	slope_prior = new Uniform(-topslope, topslope);
-    
     // save the current model for further analysis
-    save_setup();
+    // save_setup();
 }
 
 int main(int argc, char** argv)
@@ -47,7 +39,7 @@ int main(int argc, char** argv)
 	Data::get_instance().load(datafile, "ms", 7);
 
     // set the sampler and run it!
-	Sampler<RVmodel> sampler = setup<RVmodel>(argc, argv);
+	Sampler<TransitModel> sampler = setup<TransitModel>(argc, argv);
 	// sampler.run();
 
 	return 0;

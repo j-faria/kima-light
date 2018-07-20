@@ -1,6 +1,3 @@
-#ifndef DEFAULT_PRIORS_H
-#define DEFAULT_PRIORS_H
-
 #include "DNest4.h"
 
 Uniform *Cprior = new Uniform(0.9, 1.1); // normalized out-of-transit level (without unit)

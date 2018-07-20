@@ -29,6 +29,16 @@ void TransitModel::from_prior(RNG& rng)
     background = Cprior->generate(rng);
     extra_sigma = Jprior->generate(rng);
 
+    // Init VectorXd arrays with defined sizes. Done here to define just once
+    VectorXd alpha_real(1),
+        beta_real(1),
+        alpha_complex_real(1),
+        alpha_complex_imag(1),
+        beta_complex_real(1),
+        beta_complex_imag(1);
+
+
+
     // if(GP)
     // {
     //     eta1 = exp(log_eta1_prior->generate(rng)); // m/s
@@ -59,58 +69,49 @@ void TransitModel::calculate_C()
     // DOES NOTHING!!!
 
     // // Get the data
-    // const vector<double>& t = Data::get_instance().get_t();
-    // const vector<double>& sig = Data::get_instance().get_sig();
+    const vector<double>& t = Data::get_instance().get_t();
+    const vector<double>& sig = Data::get_instance().get_sig();
 
-    // #if DOCEL
-    //     // celerite!
-    //     // auto begin1 = std::chrono::high_resolution_clock::now();  // start timing
+    #if DOCEL
+        // celerite!
+        // auto begin1 = std::chrono::high_resolution_clock::now();  // start timing
 
-    //     /*
-    //     This implements the kernel in Eq (61) of Foreman-Mackey et al. (2017)
-    //     The kernel has parameters a, b, c and P
-    //     corresponding to an amplitude, factor, decay timescale and period.
-    //     */
+        /*
+        This implements the kernel in Eq (61) of Foreman-Mackey et al. (2017)
+        The kernel has parameters a, b, c and Prot
+        corresponding to an amplitude, factor, decay timescale and period.
+        */
 
-    //     VectorXd alpha_real(1),
-    //              beta_real(1),
-    //              alpha_complex_real(1),
-    //              alpha_complex_imag(1),
-    //              beta_complex_real(1),
-    //              beta_complex_imag(1);
+        // float a, b, c, Prot
 
-    //     //a = eta1;
-    //     //b = eta4;
-    //     //P = eta3;
-    //     //c = eta2;
+        // Transform variables (a, b, c, Prot) into the celerite variables (a_real, b_real, a_complex_real, a_complex_imag, b_complex_real, b_complex_imag)
+        alpha_real << a*(1.+b)/(2.+b);
+        beta_real << c;
+        alpha_complex_real << a/(2.+b);
+        alpha_complex_imag << 0.;
+        beta_complex_real << c;
+        beta_complex_imag << 2.*M_PI / Prot;
+        
 
-    //     alpha_real << eta1*(1.+eta4)/(2.+eta4);
-    //     beta_real << 1./eta2;
-    //     alpha_complex_real << eta1/(2.+eta4);
-    //     alpha_complex_imag << 0.;
-    //     beta_complex_real << 1./eta2;
-    //     beta_complex_imag << 2.*M_PI / eta3;
+        VectorXd yvar(t.size()), tt(t.size());
+        for (int i = 0; i < t.size(); ++i){
+            yvar(i) = sig[i] * sig[i] + extra_sigma * extra_sigma;
+            tt(i) = t[i];
+        }
 
-
-    //     VectorXd yvar(t.size()), tt(t.size());
-    //     for (int i = 0; i < t.size(); ++i){
-    //         yvar(i) = sig[i] * sig[i] + extra_sigma * extra_sigma;
-    //         tt(i) = t[i];
-    //     }
-
-    //     solver.compute(
-    //         extra_sigma,
-    //         alpha_real, beta_real,
-    //         alpha_complex_real, alpha_complex_imag,
-    //         beta_complex_real, beta_complex_imag,
-    //         tt, yvar  // Note: this is the measurement _variance_
-    //     );
+        solver.compute(
+            extra_sigma,
+            alpha_real, beta_real,
+            alpha_complex_real, alpha_complex_imag,
+            beta_complex_real, beta_complex_imag,
+            tt, yvar  // Note: this is the measurement _variance_
+        );
 
 
     //     // auto end1 = std::chrono::high_resolution_clock::now();
     //     // cout << "new GP: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end1-begin1).count() << " ns" << std::endl;
 
-    // #else
+    #else
 
     //     int N = Data::get_instance().get_t().size();
     //     // auto begin = std::chrono::high_resolution_clock::now();  // start timing
@@ -133,7 +134,7 @@ void TransitModel::calculate_C()
     //     // auto end = std::chrono::high_resolution_clock::now();
     //     // cout << "old GP: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() << " ns" << "\t"; // << std::endl;
 
-    // #endif
+    #endif
 }
 
 void TransitModel::calculate_mu()

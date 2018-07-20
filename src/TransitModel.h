@@ -41,17 +41,19 @@ class TransitModel
         double extra_sigma;
 
         // Parameters for the quasi-periodic extra noise
-        double eta1, eta2, eta3, eta4, eta5;
-        double log_eta1, log_eta2, log_eta3, log_eta4, log_eta5;
-        double a,b,c,P;
+        
+        // double eta1, eta2, eta3, eta4, eta5;
+        // double log_eta1, log_eta2, log_eta3, log_eta4, log_eta5;
+        double a, b, c, Prot;
 
         celerite::solver::CholeskySolver<double> solver;
+        Eigen::VectorXd yvar, tt;
         Eigen::VectorXd alpha_real,
-                 beta_real,
-                 alpha_complex_real,
-                 alpha_complex_imag,
-                 beta_complex_real,
-                 beta_complex_imag;
+            beta_real,
+            alpha_complex_real,
+            alpha_complex_imag,
+            beta_complex_real,
+            beta_complex_imag;
 
         // The signal
         std::vector<long double> mu = 

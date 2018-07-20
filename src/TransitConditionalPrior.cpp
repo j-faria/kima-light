@@ -14,15 +14,15 @@ extern ContinuousDistribution *aRprior; // a over Rstar
 extern ContinuousDistribution *PhiTprior; // Transit time in Phase
 
 
-RVConditionalPrior::RVConditionalPrior()
+TransitConditionalPrior::TransitConditionalPrior()
 {
 }
 
 
-void RVConditionalPrior::from_prior(RNG& rng)
+void TransitConditionalPrior::from_prior(RNG& rng)
 {}
 
-double RVConditionalPrior::perturb_hyperparameters(RNG& rng)
+double TransitConditionalPrior::perturb_hyperparameters(RNG& rng)
 {
     double logH = 0.;
     return logH;
@@ -33,7 +33,7 @@ double RVConditionalPrior::perturb_hyperparameters(RNG& rng)
 // vec[2] = a/R*
 // vec[3] = phi (phase of transit)
 
-double RVConditionalPrior::log_pdf(const std::vector<double>& vec) const
+double TransitConditionalPrior::log_pdf(const std::vector<double>& vec) const
 {
     return Pprior->log_pdf(vec[0]) +
            Rratprior->log_pdf(vec[1]) +
@@ -41,7 +41,7 @@ double RVConditionalPrior::log_pdf(const std::vector<double>& vec) const
            PhiTprior->log_pdf(vec[3]);
 }
 
-void RVConditionalPrior::from_uniform(std::vector<double>& vec) const
+void TransitConditionalPrior::from_uniform(std::vector<double>& vec) const
 {
     vec[0] = Pprior->cdf_inverse(vec[0]);
     vec[1] = Rratprior->cdf_inverse(vec[1]);
@@ -49,7 +49,7 @@ void RVConditionalPrior::from_uniform(std::vector<double>& vec) const
     vec[3] = PhiTprior->cdf_inverse(vec[3]);
 }
 
-void RVConditionalPrior::to_uniform(std::vector<double>& vec) const
+void TransitConditionalPrior::to_uniform(std::vector<double>& vec) const
 {
     vec[0] = Pprior->cdf(vec[0]);
     vec[1] = Rratprior->cdf(vec[1]);
@@ -57,5 +57,5 @@ void RVConditionalPrior::to_uniform(std::vector<double>& vec) const
     vec[3] = PhiTprior->cdf(vec[3]);
 }
 
-void RVConditionalPrior::print(std::ostream& out) const
+void TransitConditionalPrior::print(std::ostream& out) const
 {}

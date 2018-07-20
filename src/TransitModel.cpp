@@ -17,10 +17,6 @@ using namespace DNest4;
 #define TIMING false
 
 extern ContinuousDistribution *Cprior; // normalized out-of-transit level
-extern ContinuousDistribution *Rratprior; // radius ratio
-extern ContinuousDistribution *aRprior; // a over Rstar
-extern ContinuousDistribution *Pprior; // Orbital period 
-extern ContinuousDistribution *PhiTprior; // Transit time in Phase
 
 const double halflog2pi = 0.5*log(2.*M_PI);
 

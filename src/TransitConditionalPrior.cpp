@@ -8,7 +8,6 @@ using namespace std;
 using namespace DNest4;
 
 
-extern ContinuousDistribution *Cprior; // normalized out-of-transit level
 extern ContinuousDistribution *Rratprior; // radius ratio
 extern ContinuousDistribution *aRprior; // a over Rstar
 extern ContinuousDistribution *Pprior; // Orbital period

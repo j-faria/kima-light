@@ -218,88 +218,88 @@ double TransitModel::perturb(RNG& rng)
     const vector<double>& t = data.get_t();
     double logH = 0.;
 
-    if(GP)
-    {
-        if(rng.rand() <= 0.5)
-        {
-            logH += planets.perturb(rng);
-            planets.consolidate_diff();
-            calculate_mu();
-        }
-        else if(rng.rand() <= 0.5)
-        {
-            if(rng.rand() <= 0.25)
-            {
-                log_eta1 = log(eta1);
-                log_eta1_prior->perturb(log_eta1, rng);
-                eta1 = exp(log_eta1);
-            }
-            else if(rng.rand() <= 0.33330)
-            {
-                log_eta2 = log(eta2);
-                log_eta2_prior->perturb(log_eta2, rng);
-                eta2 = exp(log_eta2);
-            }
-            else if(rng.rand() <= 0.5)
-            {
-                eta3_prior->perturb(eta3, rng);
-            }
-            else
-            {
-                log_eta4 = log(eta4);
-                log_eta4_prior->perturb(log_eta4, rng);
-                eta4 = exp(log_eta4);
-            }
+    // if(GP)
+    // {
+    //     if(rng.rand() <= 0.5)
+    //     {
+    //         logH += planets.perturb(rng);
+    //         planets.consolidate_diff();
+    //         calculate_mu();
+    //     }
+    //     else if(rng.rand() <= 0.5)
+    //     {
+    //         if(rng.rand() <= 0.25)
+    //         {
+    //             log_eta1 = log(eta1);
+    //             log_eta1_prior->perturb(log_eta1, rng);
+    //             eta1 = exp(log_eta1);
+    //         }
+    //         else if(rng.rand() <= 0.33330)
+    //         {
+    //             log_eta2 = log(eta2);
+    //             log_eta2_prior->perturb(log_eta2, rng);
+    //             eta2 = exp(log_eta2);
+    //         }
+    //         else if(rng.rand() <= 0.5)
+    //         {
+    //             eta3_prior->perturb(eta3, rng);
+    //         }
+    //         else
+    //         {
+    //             log_eta4 = log(eta4);
+    //             log_eta4_prior->perturb(log_eta4, rng);
+    //             eta4 = exp(log_eta4);
+    //         }
 
-            calculate_C();
-        }
-        else if(rng.rand() <= 0.5)
-        {
-            Jprior->perturb(extra_sigma, rng);
-            calculate_C();
-        }
-        else
-        {
-            for(size_t i=0; i<mu.size(); i++)
-            {
-                mu[i] -= background;
-                if(trend) {
-                    mu[i] -= slope*(t[i]-data.get_t_middle());
-                }
-                if (obs_after_HARPS_fibers) {
-                    if (i >= data.index_fibers) mu[i] -= fiber_offset;
-                }
-            }
+    //         calculate_C();
+    //     }
+    //     else if(rng.rand() <= 0.5)
+    //     {
+    //         Jprior->perturb(extra_sigma, rng);
+    //         calculate_C();
+    //     }
+    //     else
+    //     {
+    //         for(size_t i=0; i<mu.size(); i++)
+    //         {
+    //             mu[i] -= background;
+    //             if(trend) {
+    //                 mu[i] -= slope*(t[i]-data.get_t_middle());
+    //             }
+    //             if (obs_after_HARPS_fibers) {
+    //                 if (i >= data.index_fibers) mu[i] -= fiber_offset;
+    //             }
+    //         }
 
-            Cprior->perturb(background, rng);
+    //         Cprior->perturb(background, rng);
 
-            // propose new fiber offset
-            if (obs_after_HARPS_fibers) {
-                fiber_offset_prior->perturb(fiber_offset, rng);
-            }
+    //         // propose new fiber offset
+    //         if (obs_after_HARPS_fibers) {
+    //             fiber_offset_prior->perturb(fiber_offset, rng);
+    //         }
 
-            // propose new slope
-            if(trend) {
-                slope_prior->perturb(slope, rng);
-            }
+    //         // propose new slope
+    //         if(trend) {
+    //             slope_prior->perturb(slope, rng);
+    //         }
 
-            for(size_t i=0; i<mu.size(); i++)
-            {
-                mu[i] += background;
-                if(trend) {
-                    mu[i] += slope*(t[i]-data.get_t_middle());
-                }
+    //         for(size_t i=0; i<mu.size(); i++)
+    //         {
+    //             mu[i] += background;
+    //             if(trend) {
+    //                 mu[i] += slope*(t[i]-data.get_t_middle());
+    //             }
 
-                if (obs_after_HARPS_fibers) {
-                    if (i >= data.index_fibers) mu[i] += fiber_offset;
-                }
-            }
-        }
+    //             if (obs_after_HARPS_fibers) {
+    //                 if (i >= data.index_fibers) mu[i] += fiber_offset;
+    //             }
+    //         }
+    //     }
 
-    }
+    // }
 
-    else
-    {
+    // else
+    // {
         if(rng.rand() <= 0.75)
         {
             logH += planets.perturb(rng);
@@ -317,39 +317,16 @@ double TransitModel::perturb(RNG& rng)
             for(size_t i=0; i<mu.size(); i++)
             {
                 mu[i] -= background;
-                if(trend) {
-                    mu[i] -= slope*(t[i]-data.get_t_middle());
-                }
-                if (obs_after_HARPS_fibers) {
-                    if (i >= data.index_fibers) mu[i] -= fiber_offset;
-                }
             }
 
             Cprior->perturb(background, rng);
 
-            // propose new fiber offset
-            if (obs_after_HARPS_fibers) {
-                fiber_offset_prior->perturb(fiber_offset, rng);
-            }
-
-            // propose new slope
-            if(trend) {
-                slope_prior->perturb(slope, rng);
-            }
-
             for(size_t i=0; i<mu.size(); i++)
             {
                 mu[i] += background;
-                if(trend) {
-                    mu[i] += slope*(t[i]-data.get_t_middle());
-                }
-
-                if (obs_after_HARPS_fibers) {
-                    if (i >= data.index_fibers) mu[i] += fiber_offset;
-                }
             }
         }
-    }
+    // }
 
 
     return logH;
@@ -455,14 +432,8 @@ void TransitModel::print(std::ostream& out) const
 
     out<<extra_sigma<<'\t';
 
-    if(trend)
-        out<<slope<<'\t'; //<<quad*1E8<<'\t';
-
-    if (obs_after_HARPS_fibers)
-        out<<fiber_offset<<'\t';
-
-    if(GP)
-        out<<eta1<<'\t'<<eta2<<'\t'<<eta3<<'\t'<<eta4<<'\t';
+    // if(GP)
+    //     out<<eta1<<'\t'<<eta2<<'\t'<<eta3<<'\t'<<eta4<<'\t';
 
     planets.print(out);
 
@@ -476,16 +447,10 @@ string TransitModel::description() const
 
     desc += "extra_sigma\t";
 
-    if(trend)
-        desc += "slope\t";
-    if (obs_after_HARPS_fibers)
-        desc += "fiber_offset\t";
-    if(GP)
-        desc += "eta1\teta2\teta3\teta4\t";
+    // if(GP)
+    //     desc += "eta1\teta2\teta3\teta4\t";
 
     desc += "ndim\tmaxNp\t";
-    if(hyperpriors)
-        desc += "muP\twP\tmuK\t";
 
     desc += "Np\t";
 

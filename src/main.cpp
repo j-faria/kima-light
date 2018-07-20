@@ -13,7 +13,7 @@ using namespace DNest4;
 #include "default_priors.h"
 
 const bool obs_after_HARPS_fibers = false;
-const bool GP = false;
+const bool GP = true;
 const bool hyperpriors = false;
 const bool trend = false;
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 {
     /* set the RV data file */
     char* datafile = "data/ktwo228801451c102_lpd_LC.txt";
-    
+
     /* load the file (RVs are in km/s) */
     /* don't skip any lines in the header */
 	Data::get_instance().load(datafile, "ms", 7);

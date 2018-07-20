@@ -2,7 +2,7 @@
 #define DNest4_RVmodel
 
 #include <vector>
-#include "RVConditionalPrior.h"
+#include "TransitConditionalPrior.h"
 #include "RJObject/RJObject.h"
 #include "RNG.h"
 #include "Data.h"

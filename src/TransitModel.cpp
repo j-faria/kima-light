@@ -169,7 +169,7 @@ void TransitModel::calculate_mu()
 
 
 
-    double P, RpRs, aRs, phi, ti;
+    double P, RpRs, aRs, phi;
     for(size_t j=0; j<components.size(); j++)
     {
             P = components[j][0];
@@ -228,14 +228,32 @@ void TransitModel::calculate_mu()
             // cout << result << endl;
             // cout << "time: " << arrays.iarr[0] << endl;
             settings.computed = 0;
+            double* ti = &t[0];
+            result = Interpolate(ti, t.size(), ARR_FLUX, &transit, &ld, &settings, &arrays);
             for(size_t i=0; i<t.size(); i++)
             {
-                ti = t[i];
-                result = Interpolate(&ti, 1, ARR_FLUX, &transit, &ld, &settings, &arrays);
-                // cout << result << endl;
-                mu[i] += arrays.iarr[0] - 1.0;
-                // cout << ti << "  " << mu[i] << " " << endl;
+              mu[i] += arrays.iarr[i] - 1.0;
+              // cout << t[i] << "  " << mu[i] << " " << endl;
             }
+
+            //     ti = t[i];
+            //     result = Interpolate(&ti, 1, ARR_FLUX, &transit, &ld, &settings, &arrays);
+            //     // cout << result << endl;
+            //     mu[i] += arrays.iarr[0] - 1.0;
+            //     // cout << ti << "  " << mu[i] << " " << endl;
+            // }
+            free(arrays.time);
+            free(arrays.flux);
+            free(arrays.bflx);
+            free(arrays.M);
+            free(arrays.E);
+            free(arrays.f);
+            free(arrays.r);
+            free(arrays.x);
+            free(arrays.y);
+            free(arrays.z);
+            free(arrays.b);
+            free(arrays.iarr); 
     }
 
     #if TIMING
@@ -523,12 +541,12 @@ void TransitModel::save_setup() {
 
 
 /// From pysyzygy
-void dbl_free(double *ptr){
-  /* 
-      Called by python to free a double pointer
-  */ 
-  free(ptr);
-} 
+// void TransitModel::dbl_free(double *ptr){
+//   /* 
+//       Called by python to free a double pointer
+//   */ 
+//   free(ptr);
+// } 
  
 double mymodulus(double x, double y) {
   /*

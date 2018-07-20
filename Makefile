@@ -11,8 +11,8 @@ includes = -I$(DNEST4_PATH) -I$(EIGEN_PATH) -I$(CELERITE_PATH)
 SRCDIR = ./src
 SRCS =\
 $(SRCDIR)/Data.cpp \
-$(SRCDIR)/RVConditionalPrior.cpp \
-$(SRCDIR)/RVmodel.cpp \
+$(SRCDIR)/TransitConditionalPrior.cpp \
+$(SRCDIR)/Transitmodel.cpp \
 $(SRCDIR)/main.cpp
 
 OBJS=$(subst .cpp,.o,$(SRCS))

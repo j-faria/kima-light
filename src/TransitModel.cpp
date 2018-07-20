@@ -17,6 +17,7 @@ using namespace DNest4;
 #define TIMING false
 
 extern ContinuousDistribution *Cprior; // normalized out-of-transit level
+extern ContinuousDistribution *Jprior; // additional white noise, m/s
 
 const double halflog2pi = 0.5*log(2.*M_PI);
 

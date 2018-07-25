@@ -8,10 +8,44 @@ except ImportError:
     import ConfigParser as configparser
 
 from .keplerian import keplerian
+import pysyzygy as ps
 from .utils import need_model_setup, get_planet_mass, get_planet_semimajor_axis,\
                    percentile68_ranges, percentile68_ranges_latex
 
+import io
 import matplotlib.pyplot as plt
+try:
+    from PySide.QtGui import QApplication, QImage
+except ImportError:
+    # from PyQt5.QtCore import QApp
+    from PyQt5.Qt import QApplication, QImage
+
+    
+def add_clipboard_to_figures():
+    # use monkey-patching to replace the original plt.figure() function with
+    # our own, which supports clipboard-copying
+    oldfig = plt.figure
+
+    def newfig(*args, **kwargs):
+        fig = oldfig(*args, **kwargs)
+        def clipboard_handler(event):
+            if event.key == 'ctrl+c':
+                # store the image in a buffer using savefig(), this has the
+                # advantage of applying all the default savefig parameters
+                # such as background color; those would be ignored if you simply
+                # grab the canvas using Qt
+                buf = io.BytesIO()
+                fig.savefig(buf)
+                QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+                buf.close()
+
+        fig.canvas.mpl_connect('key_press_event', clipboard_handler)
+        return fig
+
+    plt.figure = newfig
+
+add_clipboard_to_figures()
+
 import numpy as np
 import corner
 
@@ -421,7 +455,7 @@ class KimaResults(object):
         _, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
         if points:
-            ax1.loglog(T, A, '.', markersize=2)
+            ax1.semilogx(T, A, '.', markersize=2)
         else:
             ax1.hexbin(T, A, gridsize=50, 
                        bins='log', xscale='log', yscale='log',
@@ -429,18 +463,19 @@ class KimaResults(object):
 
 
         if points:
-            ax2.semilogx(T, E, '.', markersize=2)
+            ax2.semilogx(T, E*T+self.data[0,0], '.', markersize=2)
         else:
             ax2.hexbin(T, E, gridsize=50, bins='log', xscale='log',
                        cmap=plt.get_cmap('afmhot_r'))
         
-        ax1.set(ylabel='Semi-amplitude [m/s]',
-                title='Joint posterior semi-amplitude $-$ orbital period')
-        ax2.set(ylabel='Eccentricity',
+        ax1.set(ylabel=r'$R_p / R_s$',
+                title='Joint posterior RpRs $-$ orbital period')
+        ax2.set(ylabel=r'$T_c$',
                 xlabel='Period [days]',
-                title='Joint posterior eccentricity $-$ orbital period',
-                ylim=[0, 1],
-                xlim=[0.1, 1e7])
+                title='Joint posterior Tc $-$ orbital period',
+                # ylim=[0, 1],
+                # xlim=[1, 50]
+                )
 
 
     def make_plot4(self):
@@ -594,7 +629,7 @@ class KimaResults(object):
     def corner_planet_parameters(self, pmin=None, pmax=None):
         """ Corner plot of the posterior samples for the planet parameters """
 
-        labels = [r'$P$', r'$K$', r'$\phi$', 'ecc', 'va']
+        labels = [r'$P$', r'$R_p/R_*$', r'a/R_*', r'$\phi$']
 
         samples = self.get_sorted_planet_samples()
         samples = self.apply_cuts_period(samples, pmin, pmax)
@@ -606,17 +641,7 @@ class KimaResults(object):
             data.append(samples[:, i::self.max_components])
 
         # separate bins for each parameter
-        bins = []
-        for planetp in data:
-            if hist_tools_available:
-                bw = hist_tools.freedman_bin_width
-                # bw = hist_tools.knuth_bin_width
-                this_planet_bins = []
-                for sample in planetp.T:
-                    this_planet_bins.append(bw(sample, return_bins=True)[1].size)
-                bins.append(this_planet_bins)
-            else:
-                bins.append(None)
+        bins = None
 
 
         # set the parameter ranges to include everythinh
@@ -636,7 +661,7 @@ class KimaResults(object):
         for i, (datum, colorcycle) in enumerate(zip(data, colors)):
             fig = c(datum, fig=fig, labels=labels, show_titles=len(data)==1,
                     plot_contours=False, plot_datapoints=True, plot_density=False,
-                    bins=bins[i], range=ranges, color=colorcycle['color'],
+                    range=ranges, color=colorcycle['color'],
                     # fill_contours=True, smooth=True,
                     # contourf_kwargs={'cmap':plt.get_cmap('afmhot'), 'colors':None},
                     #hexbin_kwargs={'cmap':plt.get_cmap('afmhot_r'), 'bins':'log'},
@@ -678,46 +703,36 @@ class KimaResults(object):
 
         ## plot the Keplerian curves
         for i in ii:
-            v = np.zeros_like(tt)
+            f = np.zeros_like(tt)
             pars = samples[i, :].copy()
             nplanets = pars.size / self.n_dimensions
             for j in range(int(nplanets)):
                 P = pars[j + 0*self.max_components]
                 if P==0.0:
                     continue
-                K = pars[j + 1*self.max_components]
-                phi = pars[j + 2*self.max_components]
-                t0 = t[0] - (P*phi)/(2.*np.pi)
-                ecc = pars[j + 3*self.max_components]
-                w = pars[j + 4*self.max_components]
-                # print(P)
-                v += keplerian(tt, P, K, ecc, w, t0, 0.)
+                RpRs = pars[j + 1*self.max_components]
+                aRs = pars[j + 2*self.max_components]
+                phi = pars[j + 3*self.max_components]
+                Tc = t[0] + (P*phi)
+                
+                try:
+                    f += ps.Transit(per=P, aRs=aRs, RpRs=RpRs, t0=Tc)(tt) - 1.0
+                except:
+                    print('Failed for:', P, RpRs, aRs, Tc)
+                # v += keplerian(tt, P, K, ecc, w, t0, 0.)
 
-            vsys = self.posterior_sample[mask][i, -1]
-            v += vsys
-            if self.trend:
-                v += self.trendpars[i]*(tt - t[0])
-                if show_trend:
-                    ax.plot(tt, vsys+self.trendpars[i]*(tt - t[0]), 
-                            alpha=0.2, color='m', ls=':')
+            f0 = self.posterior_sample[mask][i, -1]
+            f += f0
 
-            ax.plot(tt, v, alpha=0.2, color='k')
-            if show_vsys:
-                ax.plot(t, vsys*np.ones_like(t), alpha=0.2, color='r', ls='--')
+            ax.plot(tt, f, alpha=0.2, color='k')
+            # if show_vsys:
+                # ax.plot(t, vsys*np.ones_like(t), alpha=0.2, color='r', ls='--')
 
 
         ## plot the data
-        if self.fiber_offset:
-            mask = t < 57170
-            ax.errorbar(t[mask], y[mask], yerr[mask], fmt='o')
-            yshift = np.vstack([y[~mask], y[~mask]-self.offset.mean()])
-            for i, ti in enumerate(t[~mask]):
-                ax.errorbar(ti, yshift[0,i], fmt='o', color='m', alpha=0.3)
-                ax.errorbar(ti, yshift[1,i], yerr[~mask][i], fmt='o', color='r')
-        else:
-            ax.errorbar(t, y, yerr, fmt='o')
+        ax.errorbar(t, y, yerr, fmt='.')
 
-        ax.set(xlabel='Time [days]', ylabel='RV [m/s]')
+        ax.set(xlabel='Time [days]', ylabel='Flux []')
         plt.tight_layout()
         # plt.show()
 
@@ -741,23 +756,23 @@ class KimaResults(object):
     def hist_vsys(self):
         """ Plot the histogram of the posterior for the systemic velocity """
         vsys = self.posterior_sample[:,-1]
-        units = ' (m/s)' if self.units=='ms' else ' (km/s)'
-        estimate = percentile68_ranges_latex(vsys) + units
+        # units = ' (m/s)' if self.units=='ms' else ' (km/s)'
+        estimate = percentile68_ranges_latex(vsys) # + units
 
         _, ax = plt.subplots(1,1)
         ax.hist(vsys)
-        title = 'Posterior distribution for $v_{\\rm sys}$ \n %s' % estimate
-        ax.set(xlabel='vsys' + units, ylabel='posterior samples',
+        title = 'Posterior distribution for $F_0$ \n %s' % estimate
+        ax.set(xlabel=r'$F_0$', ylabel='posterior samples',
                title=title)
 
 
     def hist_extra_sigma(self):
         """ Plot the histogram of the posterior for the additional white noise """
-        units = ' (m/s)' if self.units=='ms' else ' (km/s)'
-        estimate = percentile68_ranges_latex(self.extra_sigma) + units
+        # units = ' (m/s)' if self.units=='ms' else ' (km/s)'
+        estimate = percentile68_ranges_latex(self.extra_sigma) #+ units
 
         _, ax = plt.subplots(1,1)
         ax.hist(self.extra_sigma)
         title = 'Posterior distribution for extra white noise $s$ \n %s' % estimate
-        ax.set(xlabel='extra sigma (m/s)', ylabel='posterior samples',
+        ax.set(xlabel='extra sigma', ylabel='posterior samples',
                title=title)

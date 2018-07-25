@@ -24,7 +24,7 @@ TransitModel::TransitModel()
     // Cprior = new Uniform(ymin, ymax);
 
     // save the current model for further analysis
-    // save_setup();
+    save_setup();
 }
 
 int main(int argc, char** argv)

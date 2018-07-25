@@ -15,7 +15,6 @@ using namespace Eigen;
 using namespace DNest4;
 
 #define TIMING true
-#define DOCEL
 
 extern ContinuousDistribution *Cprior; // normalized out-of-transit level
 extern ContinuousDistribution *Jprior; // additional white noise, m/s
@@ -39,8 +38,6 @@ void TransitModel::from_prior(RNG& rng)
         Prot = 1.;
     }
 
-    // if(GP)
-    // {
     //     eta1 = exp(log_eta1_prior->generate(rng)); // m/s
     //     // eta1 = exp(log(1E-5) + log(1E-1)*rng.rand());
     //     //eta1 = sqrt(3.); // m/s
@@ -56,7 +53,6 @@ void TransitModel::from_prior(RNG& rng)
     //     eta4 = exp(log_eta4_prior->generate(rng));
     //     // exp(log(1E-5) + log(1E5)*rng.rand());
     //     //eta4 = 0.5;
-    // }
 
     calculate_mu();
 
@@ -66,15 +62,13 @@ void TransitModel::from_prior(RNG& rng)
 
 void TransitModel::calculate_C()
 {
-    // DOES NOTHING!!!
-
-    // // Get the data
+    // // Get the data time and uncertainties
     const vector<double>& t = Data::get_instance().get_t();
     const vector<double>& sig = Data::get_instance().get_sig();
 
-#ifdef DOCEL
-    // celerite!
-    // auto begin1 = std::chrono::high_resolution_clock::now();  // start timing
+    #if TIMING
+    auto begin1 = std::chrono::high_resolution_clock::now();  // start timing
+    #endif 
 
     /*
     This implements the kernel in Eq (61) of Foreman-Mackey et al. (2017)
@@ -82,9 +76,7 @@ void TransitModel::calculate_C()
     corresponding to an amplitude, factor, decay timescale and period.
     */
 
-    // float a, b, c, Prot
-
-    // Init VectorXd arrays with defined sizes.
+    // Initialize VectorXd arrays with defined sizes
     VectorXd alpha_real(1),
         beta_real(1),
         alpha_complex_real(1),
@@ -92,7 +84,8 @@ void TransitModel::calculate_C()
         beta_complex_real(1),
         beta_complex_imag(1);
 
-    // Transform variables (a, b, c, Prot) into the celerite variables (a_real, b_real, a_complex_real, a_complex_imag, b_complex_real, b_complex_imag)
+    // Transform variables (a, b, c, Prot) into the celerite variables 
+    // (a_real, b_real, a_complex_real, a_complex_imag, b_complex_real, b_complex_imag)
     alpha_real << a*(1.+b)/(2.+b);
     beta_real << c;
     alpha_complex_real << a/(2.+b);
@@ -111,34 +104,15 @@ void TransitModel::calculate_C()
         alpha_real, beta_real,
         alpha_complex_real, alpha_complex_imag,
         beta_complex_real, beta_complex_imag,
-        tt, yvar  // Note: this is the measurement "variance" and should not include jitter, only the uncertanty of the point
+        tt, 
+        yvar // Note: this is the measurement "variance" 
+             // and should not include jitter, only the uncertainty of the points
     );
 
-    //     // auto end1 = std::chrono::high_resolution_clock::now();
-    //     // cout << "new GP: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end1-begin1).count() << " ns" << std::endl;
-
-#endif
-
-    //     int N = Data::get_instance().get_t().size();
-    //     // auto begin = std::chrono::high_resolution_clock::now();  // start timing
-
-    //     for(size_t i=0; i<N; i++)
-    //     {
-    //         for(size_t j=i; j<N; j++)
-    //         {
-    //             //C(i, j) = eta1*eta1*exp(-0.5*pow((t[i] - t[j])/eta2, 2) );
-    //             C(i, j) = eta1*eta1*exp(-0.5*pow((t[i] - t[j])/eta2, 2)
-    //                        -2.0*pow(sin(M_PI*(t[i] - t[j])/eta3)/eta4, 2) );
-
-    //             if(i==j)
-    //                 C(i, j) += sig[i]*sig[i] + extra_sigma*extra_sigma; //+ eta5*t[i]*t[i];
-    //             else
-    //                 C(j, i) = C(i, j);
-    //         }
-    //     }
-
-    //     // auto end = std::chrono::high_resolution_clock::now();
-    //     // cout << "old GP: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() << " ns" << "\t"; // << std::endl;
+    #if TIMING
+        auto end1 = std::chrono::high_resolution_clock::now();
+        cout << "new GP: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end1-begin1).count() << " ns" << std::endl;
+    #endif
 
 }
 
@@ -336,49 +310,20 @@ double TransitModel::log_likelihood() const
 
     if(GP)
     {
-    //     /** The following code calculates the log likelihood in the case of a GP model */
-    //     // residual vector (observed y minus model y)
+        /* The following code calculates the log likelihood in the case of a GP model */
+        
+        // residual vector (observed y minus model y)
         VectorXd residual(y.size());
         for(size_t i=0; i<y.size(); i++)
             residual(i) = y[i] - mu[i];
 
-#ifdef DOCEL
         logL = -0.5 * (solver.dot_solve(residual) +
                         solver.log_determinant() +
                         y.size()*log(2*M_PI));
-    //     #else
-    //         // perform the cholesky decomposition of C
-    //         Eigen::LLT<Eigen::MatrixXd> cholesky = C.llt();
-    //         // get the lower triangular matrix L
-    //         MatrixXd L = cholesky.matrixL();
-
-    //         double logDeterminant = 0.;
-    //         for(size_t i=0; i<y.size(); i++)
-    //             logDeterminant += 2.*log(L(i,i));
-
-    //         VectorXd solution = cholesky.solve(residual);
-
-    //         // y*solution
-    //         double exponent = 0.;
-    //         for(size_t i=0; i<y.size(); i++)
-    //             exponent += residual(i)*solution(i);
-
-    //         logL = -0.5*y.size()*log(2*M_PI)
-    //                - 0.5*logDeterminant - 0.5*exponent;
-#endif
-
-    //     // calculate C^-1*(y-mu)
-    //     // auto begin = std::chrono::high_resolution_clock::now();  // start timing
-    //     // auto end = std::chrono::high_resolution_clock::now();
-    //     // cout << "solve took " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() << " ns \t";// <<  std::endl;
-
-    //     // auto begin1 = std::chrono::high_resolution_clock::now();  // start timing
-    //     // auto end1 = std::chrono::high_resolution_clock::now();
-    //     // cout << "solve took " << std::chrono::duration_cast<std::chrono::nanoseconds>(end1-begin1).count() << " ns" << std::endl;
 
     }
-    // else
-    // {
+    else
+    {
         /** The following code calculates the log likelihood in the case of a t-Student model*/
         //  for(size_t i=0; i<y.size(); i++)
         //  {
@@ -388,25 +333,26 @@ double TransitModel::log_likelihood() const
         //          - 0.5*(nu + 1.)*log(1. + pow(y[i] - mu[i], 2)/var/nu);
         //  }
 
-        // /** The following code calculates the log likelihood in the case of a Gaussian likelihood*/
-        // double var;
-        // for(size_t i=0; i<y.size(); i++)
-        // {
-        //     var = sig[i]*sig[i] + extra_sigma*extra_sigma;
-        //     logL += - halflog2pi - 0.5*log(var)
-        //             - 0.5*(pow(y[i] - mu[i], 2)/var);
-        // }
+        /** The following code calculates the log likelihood in the case of a Gaussian likelihood*/
+        double var;
+        for(size_t i=0; i<y.size(); i++)
+        {
+            var = sig[i]*sig[i] + extra_sigma*extra_sigma;
+            logL += - halflog2pi - 0.5*log(var)
+                    - 0.5*(pow(y[i] - mu[i], 2)/var);
+        }
 
-    // }
+    }
+
 
     #if TIMING
     auto end = std::chrono::high_resolution_clock::now();
     cout << "Likelihood took " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()*1E-6 << " ms" << std::endl;
     #endif
 
+
     if(std::isnan(logL) || std::isinf(logL))
     {
-        // cout << "inf!" << endl;
         logL = std::numeric_limits<double>::infinity();
         // logL = -1E300;
     }

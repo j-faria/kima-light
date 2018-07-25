@@ -162,8 +162,7 @@ class KimaResults(object):
                            '5': [self.make_plot5, {}],
                            '6': [self.plot_random_planets, 
                                     {'show_vsys':True, 'show_trend':True}],
-                           '7': [(self.hist_offset,
-                                  self.hist_vsys,
+                           '7': [(self.hist_vsys,
                                   self.hist_extra_sigma), {}],
                           }
 

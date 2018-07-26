@@ -7,7 +7,7 @@ except ImportError:
     # Python 2
     import ConfigParser as configparser
 
-from .keplerian import keplerian
+# from .keplerian import keplerian
 import pysyzygy as ps
 from .utils import need_model_setup, get_planet_mass, get_planet_semimajor_axis,\
                    percentile68_ranges, percentile68_ranges_latex
@@ -56,6 +56,30 @@ except ImportError:
     hist_tools_available = False
 
 colors = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"]
+
+
+import celerite
+from celerite import terms
+
+class RotationTerm(terms.Term):                                                                                 
+    parameter_names = ("log_a", "log_b", "log_c", "log_P")
+
+    def get_real_coefficients(self, params):
+        log_a, log_b, log_c, log_P = params                       
+        b = np.exp(log_b)
+        return (
+            np.exp(log_a) * (1.0 + b) / (2.0 + b), np.exp(log_c),
+        )                                 
+ 
+    def get_complex_coefficients(self, params):
+        log_a, log_b, log_c, log_P = params
+        b = np.exp(log_b)
+        return (
+            np.exp(log_a) / (2.0 + b), 0.0,
+            np.exp(log_c), 2*np.pi*np.exp(-log_P),
+        )
+
+
 
 class KimaResults(object):
     def __init__(self, options, data_file=None, 
@@ -701,7 +725,7 @@ class KimaResults(object):
 
         _, ax = plt.subplots(1,1)
 
-        ## plot the Keplerian curves
+        ## plot the transit curves
         for i in ii:
             f = np.zeros_like(tt)
             pars = samples[i, :].copy()
@@ -716,10 +740,14 @@ class KimaResults(object):
                 Tc = t[0] + (P*phi)
                 
                 try:
-                    f += ps.Transit(per=P, aRs=aRs, RpRs=RpRs, t0=Tc)(tt) - 1.0
+                    f += ps.Transit(per=P, aRs=aRs, RpRs=RpRs, t0=Tc, u1=0, u2=0)(tt) - 1.0
                 except:
                     print('Failed for:', P, RpRs, aRs, Tc)
-                # v += keplerian(tt, P, K, ecc, w, t0, 0.)
+
+                # kernel = RotationTerm(log_a=log(a), log_b=log(b), log_c=log(c), log_P=log(P)) #bounds=bounds)
+                # gp = celerite.GP(kernel, mean=0)
+                # gp.compute(t, yerr)
+
 
             f0 = self.posterior_sample[mask][i, -1]
             f += f0

@@ -250,16 +250,16 @@ double TransitModel::perturb(RNG& rng)
     double logH = 0.;
     // cout << "here!" << endl;
 
-    // if(GP)
-    // {
-    //     if(rng.rand() <= 0.5)
-    //     {
-    //         logH += planets.perturb(rng);
-    //         planets.consolidate_diff();
-    //         calculate_mu();
-    //     }
-    //     else if(rng.rand() <= 0.5)
-    //     {
+    if(GP)
+    {
+        if(rng.rand() <= 0.5)
+        {
+            logH += planets.perturb(rng);
+            planets.consolidate_diff();
+            calculate_mu();
+        }
+        else if(rng.rand() <= 0.5)
+        {
     //         if(rng.rand() <= 0.25)
     //         {
     //             log_eta1 = log(eta1);
@@ -287,8 +287,8 @@ double TransitModel::perturb(RNG& rng)
     //     }
     //     else if(rng.rand() <= 0.5)
     //     {
-    //         Jprior->perturb(extra_sigma, rng);
-    //         calculate_C();
+            Jprior->perturb(extra_sigma, rng);
+            calculate_C();
     //     }
     //     else
     //     {
@@ -326,12 +326,12 @@ double TransitModel::perturb(RNG& rng)
     //                 if (i >= data.index_fibers) mu[i] += fiber_offset;
     //             }
     //         }
-    //     }
+        }
 
-    // }
+    }
 
-    // else
-    // {
+    else
+    {
         if(rng.rand() <= 0.75)
         {
             logH += planets.perturb(rng);
@@ -358,7 +358,7 @@ double TransitModel::perturb(RNG& rng)
                 mu[i] += background;
             }
         }
-    // }
+    }
 
 
     return logH;
@@ -437,8 +437,9 @@ void TransitModel::print(std::ostream& out) const
 
     out<<extra_sigma<<'\t';
 
-    // if(GP)
-    //     out<<eta1<<'\t'<<eta2<<'\t'<<eta3<<'\t'<<eta4<<'\t';
+    if(GP)
+        out<<a<<'\t'<<b<<'\t'<<c<<'\t'<<Prot<<'\t';
+        // out<<eta1<<'\t'<<eta2<<'\t'<<eta3<<'\t'<<eta4<<'\t';
 
     planets.print(out);
 
@@ -452,8 +453,8 @@ string TransitModel::description() const
 
     desc += "extra_sigma\t";
 
-    // if(GP)
-    //     desc += "eta1\teta2\teta3\teta4\t";
+    if(GP)
+        desc += "a\tb\tc\tprot\t";
 
     desc += "ndim\tmaxNp\t";
 

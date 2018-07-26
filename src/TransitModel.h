@@ -192,7 +192,7 @@ class TransitModel
         int npmax {1};
 
         DNest4::RJObject<TransitConditionalPrior> planets =
-            DNest4::RJObject<TransitConditionalPrior>(5, npmax, fix, TransitConditionalPrior());
+            DNest4::RJObject<TransitConditionalPrior>(4, npmax, fix, TransitConditionalPrior());
 
         // set the LD model
         LIMBDARK ld = {
